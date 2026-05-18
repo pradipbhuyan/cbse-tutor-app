@@ -23,6 +23,38 @@ USERS = {
     "student": "student123"
 }
 
+import os
+from services.ocr import extract_text_from_image
+from services.rag import add_textbook_content
+
+st.sidebar.markdown("---")
+st.sidebar.subheader("📚 Add Textbook Content")
+
+uploaded_file = st.sidebar.file_uploader(
+    "Upload textbook photo",
+    type=["jpg", "jpeg", "png"]
+)
+
+if uploaded_file:
+    os.makedirs("uploaded_docs", exist_ok=True)
+
+    file_path = os.path.join("uploaded_docs", uploaded_file.name)
+
+    with open(file_path, "wb") as f:
+        f.write(uploaded_file.getbuffer())
+
+    if st.sidebar.button("Add to RAG DB"):
+        with st.spinner("Extracting text and adding to RAG DB..."):
+            extracted_text = extract_text_from_image(file_path)
+
+            chunks_added = add_textbook_content(
+                text=extracted_text,
+                subject=subject,
+                chapter=chapter,
+                source_name=uploaded_file.name
+            )
+
+            st.sidebar.success(f"Added {chunks_added} chunks to RAG DB.")
 
 def login_page():
     st.title("🔐 Login - Grade 9 CBSE AI Tutor")
