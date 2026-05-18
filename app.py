@@ -224,8 +224,20 @@ with tab1:
                 mode,
                 steps[current_step]
             )
-
+            
+            st.session_state["current_lesson"] = lesson
+            
             st.markdown(lesson)
+            
+            if st.button("🔊 Read Aloud"):
+            
+                with st.spinner("Generating audio..."):
+            
+                    audio_file = generate_speech(lesson)
+            
+                    audio_bytes = open(audio_file, "rb").read()
+            
+                    st.audio(audio_bytes, format="audio/mp3")
 
 
 # =========================================================
