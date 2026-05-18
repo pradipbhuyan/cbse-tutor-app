@@ -5,28 +5,21 @@ from services.tutor import generate_step_lesson, answer_doubt
 from services.quiz import generate_quiz
 from services.progress import get_current_step, save_current_step, mark_completed
 from services.llm import generate_speech
-from services.mock_test import generate_mock_test
+from services.mock_test import generate_science_olympiad_mock_test, calculate_score
 
-# -----------------------------
-# Streamlit Page Configuration
-# -----------------------------
+
 st.set_page_config(
     page_title="Grade 9 CBSE AI Tutor",
     page_icon="📚",
     layout="wide"
 )
 
-# -----------------------------
-# Dummy Users for Login
-# -----------------------------
 USERS = {
     "parent": "parent123",
     "student": "student123"
 }
 
-# -----------------------------
-# Login Page
-# -----------------------------
+
 def login_page():
     st.title("🔐 Login - Grade 9 CBSE AI Tutor")
     st.markdown("### Welcome to the AI Learning Platform")
@@ -43,9 +36,7 @@ def login_page():
         else:
             st.error("❌ Invalid username or password")
 
-# -----------------------------
-# Logout
-# -----------------------------
+
 def logout_button():
     with st.sidebar:
         st.write(f"👤 Logged in as: **{st.session_state.get('username')}**")
@@ -55,30 +46,19 @@ def logout_button():
             st.session_state["username"] = None
             st.rerun()
 
-# -----------------------------
-# Session State Initialization
-# -----------------------------
+
 if "logged_in" not in st.session_state:
     st.session_state["logged_in"] = False
 
 if "username" not in st.session_state:
     st.session_state["username"] = None
 
-# -----------------------------
-# Show Login Page if not logged in
-# -----------------------------
 if not st.session_state["logged_in"]:
     login_page()
     st.stop()
 
-# -----------------------------
-# Sidebar Logout
-# -----------------------------
 logout_button()
 
-# -----------------------------
-# Main Application
-# -----------------------------
 st.title("📚 Grade 9 CBSE + SOF Olympiad AI Tutor")
 
 st.markdown("""
@@ -95,41 +75,18 @@ Welcome to the AI-powered tutor platform for:
 Choose a learning mode from the sidebar.
 """)
 
-# -----------------------------
-# Sidebar Options
-# -----------------------------
 mode = st.sidebar.radio(
     "Choose Learning Mode",
     ["CBSE Chapter Tutor", "SOF Olympiad Tutor"]
 )
 
-# -----------------------------
-# Subject & Chapter Selection
-# -----------------------------
 if mode == "CBSE Chapter Tutor":
-    subject = st.sidebar.selectbox(
-        "Select Subject",
-        list(CBSE_9.keys())
-    )
-
-    chapter = st.sidebar.selectbox(
-        "Select Chapter",
-        CBSE_9[subject]
-    )
+    subject = st.sidebar.selectbox("Select Subject", list(CBSE_9.keys()))
+    chapter = st.sidebar.selectbox("Select Chapter", CBSE_9[subject])
 else:
-    subject = st.sidebar.selectbox(
-        "Select Olympiad",
-        list(SOF_9.keys())
-    )
+    subject = st.sidebar.selectbox("Select Olympiad", list(SOF_9.keys()))
+    chapter = st.sidebar.selectbox("Select Section", SOF_9[subject])
 
-    chapter = st.sidebar.selectbox(
-        "Select Section",
-        SOF_9[subject]
-    )
-
-# -----------------------------
-# Tabs
-# -----------------------------
 
 tab1, tab2, tab3, tab4 = st.tabs([
     "📖 Lesson",
@@ -137,6 +94,7 @@ tab1, tab2, tab3, tab4 = st.tabs([
     "📝 Quiz",
     "🧪 Mock Test"
 ])
+
 
 # =========================================================
 # TAB 1 - STEP-WISE LESSON GENERATOR
@@ -159,7 +117,6 @@ with tab1:
 
     saved_step = get_current_step(username, mode, subject, chapter)
 
-    # Unique keys preserve lessons separately for each user/mode/subject/chapter.
     step_key = f"lesson_step_{username}_{mode}_{subject}_{chapter}"
     lesson_key = f"lesson_text_{username}_{mode}_{subject}_{chapter}"
     audio_key = f"lesson_audio_{username}_{mode}_{subject}_{chapter}"
@@ -169,7 +126,6 @@ with tab1:
 
     current_step = st.session_state[step_key]
 
-    # Safety check in case syllabus steps changed after progress was saved.
     if current_step >= len(steps):
         current_step = 0
         st.session_state[step_key] = 0
@@ -223,7 +179,6 @@ with tab1:
             st.session_state[lesson_key] = lesson
             st.session_state.pop(audio_key, None)
 
-    # Keep lesson visible after Streamlit reruns.
     if lesson_key in st.session_state:
         lesson = st.session_state[lesson_key]
         st.markdown(lesson)
@@ -234,11 +189,11 @@ with tab1:
                 with open(audio_file, "rb") as audio:
                     st.session_state[audio_key] = audio.read()
 
-        # Keep audio player visible after reruns too.
         if audio_key in st.session_state:
             st.audio(st.session_state[audio_key], format="audio/mp3")
     else:
         st.warning("Click **Generate This Step Lesson** to start or resume this lesson step.")
+
 
 # =========================================================
 # TAB 2 - ASK DOUBT
@@ -253,12 +208,9 @@ with tab2:
             st.warning("Please enter a question.")
         else:
             with st.spinner("Thinking..."):
-                answer = answer_doubt(
-                    subject,
-                    chapter,
-                    doubt
-                )
+                answer = answer_doubt(subject, chapter, doubt)
                 st.markdown(answer)
+
 
 # =========================================================
 # TAB 3 - QUIZ
@@ -268,108 +220,153 @@ with tab3:
 
     difficulty = st.selectbox(
         "Select Difficulty",
-        [
-            "Easy",
-            "Medium",
-            "Hard",
-            "Olympiad HOTS"
-        ]
+        ["Easy", "Medium", "Hard", "Olympiad HOTS"],
+        key="quiz_difficulty"
     )
 
     count = st.slider(
         "Number of Questions",
         3,
         15,
-        5
+        5,
+        key="quiz_count"
     )
 
     if st.button("Generate Quiz"):
         with st.spinner("Creating quiz..."):
-            quiz = generate_quiz(
-                subject,
-                chapter,
-                mode,
-                difficulty,
-                count
-            )
+            quiz = generate_quiz(subject, chapter, mode, difficulty, count)
             st.markdown(quiz)
+
 
 # =========================================================
 # TAB 4 - MOCK TEST
 # =========================================================
 with tab4:
-
     st.subheader("🧪 SOF Science Olympiad Mock Test")
 
-    st.write("""
-This mock test is based on SOF-style previous exam patterns.
+    if mode != "SOF Olympiad Tutor" or subject != "Science Olympiad":
+        st.info("Mock Test is currently available for **SOF Olympiad Tutor → Science Olympiad**.")
+    else:
+        st.write("""
+This creates an original SOF-style Science Olympiad mock test.
 
-Includes:
-- Logical reasoning
+It includes:
+- Logical Reasoning
 - Physics
 - Chemistry
 - Biology
-- HOTS questions
+- Achievers/HOTS questions
 """)
 
-    if "mock_test" not in st.session_state:
-        st.session_state["mock_test"] = None
+        mock_difficulty = st.selectbox(
+            "Select Mock Test Difficulty",
+            ["Easy", "Medium", "Hard", "Olympiad HOTS"],
+            key="mock_difficulty"
+        )
 
-    if st.button("Generate Mock Test"):
+        mock_count = st.slider(
+            "Number of Mock Test Questions",
+            5,
+            25,
+            10,
+            key="mock_count"
+        )
 
-        with st.spinner("Generating Olympiad mock test..."):
+        mock_key = f"mock_test_{st.session_state.get('username')}_{mock_difficulty}_{mock_count}"
+        submitted_key = f"mock_submitted_{st.session_state.get('username')}"
+        results_key = f"mock_results_{st.session_state.get('username')}"
 
-            mock_test = generate_mock_test()
+        if "mock_test" not in st.session_state:
+            st.session_state["mock_test"] = []
 
-            st.session_state["mock_test"] = mock_test
+        if submitted_key not in st.session_state:
+            st.session_state[submitted_key] = False
 
-    if st.session_state["mock_test"]:
+        if st.button("Generate Mock Test"):
+            with st.spinner("Generating Science Olympiad mock test..."):
+                questions = generate_science_olympiad_mock_test(
+                    num_questions=mock_count,
+                    difficulty=mock_difficulty
+                )
 
-        test = st.session_state["mock_test"]
+                st.session_state["mock_test"] = questions
+                st.session_state[submitted_key] = False
+                st.session_state.pop(results_key, None)
 
-        user_answers = []
+                for key in list(st.session_state.keys()):
+                    if str(key).startswith("mock_answer_"):
+                        del st.session_state[key]
 
-        st.markdown("---")
+        questions = st.session_state.get("mock_test", [])
 
-        for i, q in enumerate(test):
-
-            st.write(f"### Q{i+1}. {q['question']}")
-
-            answer = st.radio(
-                "Choose answer",
-                q["options"],
-                key=f"mock_{i}"
-            )
-
-            user_answers.append(answer)
+        if not questions:
+            st.warning("Click **Generate Mock Test** to start.")
+        else:
+            user_answers = {}
 
             st.markdown("---")
 
-        if st.button("Submit Test"):
+            for q in questions:
+                qid = str(q.get("id"))
+                options = q.get("options", {})
 
-            score = 0
+                st.markdown(f"### Q{qid}. {q.get('question', '')}")
+                st.caption(f"Section: {q.get('section', 'Science')} | Marks: {q.get('marks', 1)}")
 
-            st.subheader("📊 Results")
-
-            for i, q in enumerate(test):
-
-                correct = q["correct_answer"]
-
-                if user_answers[i] == correct:
-                    score += 1
-                    st.success(f"Q{i+1}: Correct")
+                if options:
+                    selected = st.radio(
+                        "Choose your answer",
+                        list(options.keys()),
+                        format_func=lambda x, opts=options: f"{x}. {opts.get(x, '')}",
+                        key=f"mock_answer_{qid}"
+                    )
+                    user_answers[qid] = selected
                 else:
-                    st.error(f"Q{i+1}: Incorrect")
-
-                st.write(f"✅ Correct Answer: {correct}")
-                st.write(f"📘 Explanation: {q['explanation']}")
+                    st.error("This question has no options. Generate a new mock test.")
 
                 st.markdown("---")
 
-            st.success(f"🎯 Final Score: {score} / {len(test)}")
+            if st.button("Submit Mock Test"):
+                total_score, max_score, results = calculate_score(
+                    questions,
+                    user_answers
+                )
 
-# -----------------------------
-# Footer
-# -----------------------------
+                st.session_state[results_key] = {
+                    "total_score": total_score,
+                    "max_score": max_score,
+                    "results": results
+                }
+
+                st.session_state[submitted_key] = True
+
+            if st.session_state.get(submitted_key) and results_key in st.session_state:
+                result_data = st.session_state[results_key]
+
+                st.success(
+                    f"🎯 Your Score: {result_data['total_score']} / {result_data['max_score']}"
+                )
+
+                st.subheader("Answer Review")
+
+                for result in result_data["results"]:
+                    if result["is_correct"]:
+                        st.success(f"Q{result['id']}: Correct")
+                    else:
+                        st.error(f"Q{result['id']}: Incorrect")
+
+                    options = result.get("options", {})
+                    selected = result.get("selected")
+                    correct = result.get("correct")
+
+                    selected_text = options.get(selected, "Not answered")
+                    correct_text = options.get(correct, "")
+
+                    st.write(f"Your answer: **{selected}. {selected_text}**")
+                    st.write(f"Correct answer: **{correct}. {correct_text}**")
+                    st.write(f"Explanation: {result.get('explanation', '')}")
+                    st.markdown("---")
+
+
 st.markdown("---")
-st.caption("© 2026 Grade 9 CBSE + SOF Olympiad AI Tutor - Created by Pradip Bhuyan")
+st.caption("© 2026 Grade 9 CBSE + SOF Olympiad AI Tutor, Created by PB for AB")
