@@ -26,10 +26,12 @@ def ask_llm(system_prompt: str, user_prompt: str) -> str:
     return response.output_text
 
 
-async def _generate_edge_tts(text, output_file, voice):
+async def _generate_edge_tts(text, output_file, voice, rate="+0%", pitch="+0Hz"):
     communicate = edge_tts.Communicate(
         text=text,
-        voice=voice
+        voice=voice,
+        rate=rate,
+        pitch=pitch
     )
 
     await communicate.save(output_file)
@@ -61,18 +63,20 @@ def clean_text_for_tts(text: str) -> str:
 def generate_speech(
     text,
     output_file="lesson.mp3",
-    voice="en-IN-NeerjaNeural"
+    voice="en-IN-NeerjaNeural",
+    rate="+0%",
+    pitch="+0Hz"
 ):
-
-
     cleaned_text = clean_text_for_tts(text)
 
     asyncio.run(
         _generate_edge_tts(
             cleaned_text,
             output_file,
-            voice
+            voice,
+            rate,
+            pitch
         )
     )
-    
+
     return output_file
