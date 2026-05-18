@@ -149,7 +149,7 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs([
     "📝 Quiz",
     "🧪 Mock Test",
     "🎥 Learn More"
-])
+]
 
 # =========================================================
 # TAB 1 - STEP-WISE LESSON GENERATOR
