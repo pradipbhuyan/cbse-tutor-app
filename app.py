@@ -38,7 +38,13 @@ VOICE_OPTIONS = {
     "UK Male (Ryan)": "en-GB-RyanNeural"
 }
 
-
+TEACHER_PERSONAS = {
+    "Friendly Teacher": "Explain warmly, patiently, and encouragingly.",
+    "Strict Exam Coach": "Focus on exam preparation, accuracy, common mistakes, and scoring.",
+    "Slow Step-by-Step Teacher": "Explain slowly, with very small steps and simple examples.",
+    "Olympiad Coach": "Focus on reasoning, HOTS, shortcuts, and tricky question patterns.",
+    "Storytelling Teacher": "Explain concepts using stories, analogies, and real-life examples."
+}
 
 def login_page():
     st.title("🔐 Login - Grade 9 CBSE AI Tutor")
@@ -108,12 +114,30 @@ else:
     chapter = st.sidebar.selectbox("Select Section", SOF_9[subject])
 
 selected_voice_name = st.sidebar.selectbox(
-    "🔊 Select Narration Voice",
+    "🔊 Narration Voice",
     list(VOICE_OPTIONS.keys()),
     index=0
 )
 
 selected_voice = VOICE_OPTIONS[selected_voice_name]
+
+speech_rate = st.sidebar.selectbox(
+    "Narration Speed",
+    ["-25%", "-10%", "+0%", "+10%", "+20%"],
+    index=2
+)
+
+speech_pitch = st.sidebar.selectbox(
+    "Narration Pitch",
+    ["-10Hz", "+0Hz", "+10Hz", "+20Hz"],
+    index=1
+)
+
+teacher_persona = st.sidebar.selectbox(
+    "👩‍🏫 Teacher Persona",
+    list(TEACHER_PERSONAS.keys()),
+    index=0
+)
 
 tab1, tab2, tab3, tab4 = st.tabs([
     "📖 Lesson",
@@ -201,7 +225,8 @@ with tab1:
                 subject,
                 chapter,
                 mode,
-                steps[current_step]
+                steps[current_step],
+                TEACHER_PERSONAS[teacher_persona]
             )
             st.session_state[lesson_key] = lesson
             st.session_state.pop(audio_key, None)
