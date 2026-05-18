@@ -15,6 +15,8 @@ from services.mock_test import (
 
 from services.ocr import extract_text_from_image
 
+from data.resources import LEARNING_RESOURCES
+
 st.set_page_config(
     page_title="Grade 9 CBSE AI Tutor",
     page_icon="📚",
@@ -139,13 +141,15 @@ teacher_persona = st.sidebar.selectbox(
     index=0
 )
 
-tab1, tab2, tab3, tab4 = st.tabs([
+
+tab1, tab2, tab3, tab4, tab5 = st.tabs([
+    [
     "📖 Lesson",
     "❓ Ask Doubt",
     "📝 Quiz",
-    "🧪 Mock Test"
+    "🧪 Mock Test",
+    "🎥 Learn More"
 ])
-
 
 # =========================================================
 # TAB 1 - STEP-WISE LESSON GENERATOR
@@ -441,6 +445,42 @@ with tab4:
 
                 st.markdown("---")
 
+# =========================================================
+# TAB 5 - LEARNING RESOURCES
+# =========================================================
+with tab5:
+
+    st.subheader("🎥 Additional Learning Resources")
+
+    st.write("""
+Explore videos, tutorials, and reference material
+for deeper understanding.
+""")
+
+    subject_resources = LEARNING_RESOURCES.get(subject, {})
+    chapter_resources = subject_resources.get(chapter, [])
+
+    if not chapter_resources:
+
+        st.info("No curated resources available yet for this topic.")
+
+    else:
+
+        for resource in chapter_resources:
+
+            st.markdown(f"### {resource['title']}")
+
+            if resource["type"] == "youtube":
+
+                st.video(resource["url"])
+
+            elif resource["type"] == "website":
+
+                st.markdown(
+                    f"[Open Resource]({resource['url']})"
+                )
+
+            st.markdown("---")
 
 st.markdown("---")
 st.caption("© 2026 Grade 9 CBSE + SOF Olympiad AI Tutor, Created by PB for AB")
