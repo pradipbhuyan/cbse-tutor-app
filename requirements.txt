@@ -1,7 +1,7 @@
-streamlit
-openai
-python-dotenv
-pydantic
-chromadb
-pillow
-pypdf
+streamlit==1.57.0
+openai==2.37.0
+python-dotenv==1.2.2
+pydantic==2.13.4
+chromadb==1.1.1
+pillow==12.2.0
+pypdf==6.1.3
