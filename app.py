@@ -129,10 +129,12 @@ else:
 # -----------------------------
 # Tabs
 # -----------------------------
-tab1, tab2, tab3 = st.tabs([
+
+tab1, tab2, tab3, tab4 = st.tabs([
     "📖 Lesson",
     "❓ Ask Doubt",
-    "📝 Quiz"
+    "📝 Quiz",
+    "🧪 Mock Test"
 ])
 
 # =========================================================
@@ -291,8 +293,82 @@ with tab3:
             )
             st.markdown(quiz)
 
+# =========================================================
+# TAB 4 - MOCK TEST
+# =========================================================
+with tab4:
+
+    st.subheader("🧪 SOF Science Olympiad Mock Test")
+
+    st.write("""
+This mock test is based on SOF-style previous exam patterns.
+
+Includes:
+- Logical reasoning
+- Physics
+- Chemistry
+- Biology
+- HOTS questions
+""")
+
+    if "mock_test" not in st.session_state:
+        st.session_state["mock_test"] = None
+
+    if st.button("Generate Mock Test"):
+
+        with st.spinner("Generating Olympiad mock test..."):
+
+            mock_test = generate_mock_test()
+
+            st.session_state["mock_test"] = mock_test
+
+    if st.session_state["mock_test"]:
+
+        test = st.session_state["mock_test"]
+
+        user_answers = []
+
+        st.markdown("---")
+
+        for i, q in enumerate(test):
+
+            st.write(f"### Q{i+1}. {q['question']}")
+
+            answer = st.radio(
+                "Choose answer",
+                q["options"],
+                key=f"mock_{i}"
+            )
+
+            user_answers.append(answer)
+
+            st.markdown("---")
+
+        if st.button("Submit Test"):
+
+            score = 0
+
+            st.subheader("📊 Results")
+
+            for i, q in enumerate(test):
+
+                correct = q["correct_answer"]
+
+                if user_answers[i] == correct:
+                    score += 1
+                    st.success(f"Q{i+1}: Correct")
+                else:
+                    st.error(f"Q{i+1}: Incorrect")
+
+                st.write(f"✅ Correct Answer: {correct}")
+                st.write(f"📘 Explanation: {q['explanation']}")
+
+                st.markdown("---")
+
+            st.success(f"🎯 Final Score: {score} / {len(test)}")
+
 # -----------------------------
 # Footer
 # -----------------------------
 st.markdown("---")
-st.caption("© 2026 Grade 9 CBSE + SOF Olympiad AI Tutor")
+st.caption("© 2026 Grade 9 CBSE + SOF Olympiad AI Tutor - Created by Pradip Bhuyan")
