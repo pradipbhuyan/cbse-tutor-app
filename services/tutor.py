@@ -1,5 +1,5 @@
 from services.llm import ask_llm
-from services.rag import search_textbook_content
+#from services.rag import search_textbook_content
 
 TUTOR_SYSTEM = """
 You are a Grade 9 CBSE tutor.
@@ -19,32 +19,22 @@ Teach step-by-step:
 
 
 def generate_step_lesson(subject, chapter, mode, step_title):
-    retrieved = search_textbook_content(
-        query=step_title,
-        subject=subject,
-        chapter=chapter,
-        top_k=5
-    )
-
-    context = "\n\n".join(
-        [
-            f"Source: {meta['source_name']}, Page: {meta.get('page_number', '')}\n{doc}"
-            for doc, meta in retrieved
-        ]
-    )
-
     prompt = f"""
 Mode: {mode}
 Subject: {subject}
 Chapter: {chapter}
 Current sub-topic: {step_title}
 
-TEXTBOOK CONTEXT:
-{context}
+Create a focused step-wise lesson only for this sub-topic.
+Do not cover unrelated topics.
 
-Create a focused lesson using the textbook context.
-Do not invent textbook lines.
-If context is missing, clearly say: "No textbook context found for this topic."
+Teach using:
+1. What you will learn
+2. Simple explanation
+3. Step-by-step breakdown
+4. Worked example
+5. Common mistake
+6. Quick check question
+7. Summary
 """
-
     return ask_llm(TUTOR_SYSTEM, prompt)
