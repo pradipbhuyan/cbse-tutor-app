@@ -237,10 +237,11 @@ with tab1:
 
         if st.button("🔊 Read Aloud"):
             with st.spinner("Generating audio..."):
-           
                 audio_file = generate_speech(
                     lesson,
-                    voice=selected_voice
+                    voice=selected_voice,
+                    rate=speech_rate,
+                    pitch=speech_pitch
                 )
                 with open(audio_file, "rb") as audio:
                     st.session_state[audio_key] = audio.read()
