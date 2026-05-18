@@ -21,12 +21,15 @@ For Hindi, explain in Hindi.
 """
 
 
-def generate_step_lesson(subject, chapter, mode, step_title):
+def generate_step_lesson(subject, chapter, mode, step_title, teacher_persona=""):
     prompt = f"""
 Mode: {mode}
 Subject: {subject}
 Chapter: {chapter}
 Current sub-topic: {step_title}
+
+Teacher Persona:
+{teacher_persona}
 
 Create a focused step-wise lesson only for this sub-topic.
 Do not cover unrelated topics.
