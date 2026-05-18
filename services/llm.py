@@ -1,10 +1,14 @@
 import os
+import asyncio
+import edge_tts
+
 from openai import OpenAI
 from dotenv import load_dotenv
 
 load_dotenv()
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
 
 def ask_llm(system_prompt: str, user_prompt: str) -> str:
 
@@ -20,16 +24,27 @@ def ask_llm(system_prompt: str, user_prompt: str) -> str:
     return response.output_text
 
 
-def generate_speech(text, output_file="lesson.mp3"):
+async def _generate_edge_tts(text, output_file, voice):
+    communicate = edge_tts.Communicate(
+        text=text,
+        voice=voice
+    )
 
-    speech_file_path = output_file
+    await communicate.save(output_file)
 
-    with client.audio.speech.with_streaming_response.create(
-        model="gpt-4o-mini-tts",
-        voice="alloy",
-        input=text
-    ) as response:
 
-        response.stream_to_file(speech_file_path)
+def generate_speech(
+    text,
+    output_file="lesson.mp3",
+    voice="en-IN-NeerjaNeural"
+):
 
-    return speech_file_path
+    asyncio.run(
+        _generate_edge_tts(
+            text,
+            output_file,
+            voice
+        )
+    )
+
+    return output_file
