@@ -33,5 +33,27 @@ LESSON_STEPS = {
             "HOTS practice",
             "Mock test"
         ]
+    },
+    "Maths Olympiad": {
+        "Mathematical Reasoning": [
+            "Number systems reasoning",
+            "Algebra patterns",
+            "Geometry reasoning",
+            "Mensuration problems",
+            "Data handling",
+            "HOTS practice",
+            "Mock test"
+        ]
+    },
+    "English Olympiad": {
+        "Word and Structure Knowledge": [
+            "Vocabulary building",
+            "Grammar basics",
+            "Sentence correction",
+            "Reading comprehension",
+            "Spoken expression",
+            "Written expression",
+            "Mock test"
+        ]
     }
 }
