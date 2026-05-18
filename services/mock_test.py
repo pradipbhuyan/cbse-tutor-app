@@ -1,10 +1,12 @@
 import json
 from services.llm import ask_llm
 
+
 MOCK_TEST_SYSTEM = """
-You create original Grade 9 SOF Science Olympiad style mock tests.
+You create original Grade 9 SOF Olympiad style mock tests.
 Do not copy previous year questions verbatim.
-Create questions inspired by common SOF NSO/ISO patterns: logical reasoning, science concepts, application, data interpretation, assertion-reason, and achievers/HOTS.
+Create questions inspired by common SOF patterns.
+
 Return ONLY valid JSON. No markdown.
 
 JSON schema:
@@ -12,7 +14,7 @@ JSON schema:
   "questions": [
     {
       "id": 1,
-      "section": "Logical Reasoning|Science|Achievers Section",
+      "section": "...",
       "question": "...",
       "options": {"A": "...", "B": "...", "C": "...", "D": "..."},
       "answer": "A",
@@ -24,19 +26,55 @@ JSON schema:
 """
 
 
-def generate_science_olympiad_mock_test(num_questions=10, difficulty="Medium"):
-    prompt = f"""
+def generate_olympiad_mock_test(olympiad, num_questions=10, difficulty="Medium"):
+    if olympiad == "Science Olympiad":
+        pattern = """
 Create a Class 9 SOF Science Olympiad style mock test.
-Difficulty: {difficulty}
-Number of questions: {num_questions}
 
 Pattern:
 - Logical Reasoning: about 20%
 - Science: about 70%
 - Achievers Section/HOTS: about 10%
 
-Use Class 9 CBSE/NCERT science plus previous-class foundational concepts where useful.
-Include Physics, Chemistry, Biology, and reasoning.
+Include Physics, Chemistry, Biology, reasoning, application and HOTS.
+"""
+
+    elif olympiad == "Maths Olympiad":
+        pattern = """
+Create a Class 9 SOF Maths Olympiad style mock test.
+
+Pattern:
+- Logical Reasoning: about 20%
+- Mathematical Reasoning: about 50%
+- Everyday Mathematics: about 20%
+- Achievers Section/HOTS: about 10%
+
+Include number systems, algebra, geometry, mensuration, statistics, probability, logical puzzles and HOTS.
+"""
+
+    elif olympiad == "English Olympiad":
+        pattern = """
+Create a Class 9 SOF English Olympiad style mock test.
+
+Pattern:
+- Word and Structure Knowledge
+- Reading
+- Spoken and Written Expression
+- Achievers Section/HOTS
+
+Include vocabulary, grammar, sentence correction, comprehension, inference, para jumbles and usage.
+"""
+
+    else:
+        pattern = """
+Create a Class 9 SOF Olympiad style mock test.
+"""
+
+    prompt = f"""
+{pattern}
+
+Difficulty: {difficulty}
+Number of questions: {num_questions}
 
 Return only valid JSON.
 """
@@ -48,6 +86,30 @@ Return only valid JSON.
         return data.get("questions", [])
     except Exception:
         return []
+
+
+def generate_science_olympiad_mock_test(num_questions=10, difficulty="Medium"):
+    return generate_olympiad_mock_test(
+        "Science Olympiad",
+        num_questions,
+        difficulty
+    )
+
+
+def generate_maths_olympiad_mock_test(num_questions=10, difficulty="Medium"):
+    return generate_olympiad_mock_test(
+        "Maths Olympiad",
+        num_questions,
+        difficulty
+    )
+
+
+def generate_english_olympiad_mock_test(num_questions=10, difficulty="Medium"):
+    return generate_olympiad_mock_test(
+        "English Olympiad",
+        num_questions,
+        difficulty
+    )
 
 
 def calculate_score(questions, user_answers):
