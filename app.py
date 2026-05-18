@@ -4,6 +4,8 @@ from services.tutor import generate_step_lesson, answer_doubt
 from services.progress import get_current_step, save_current_step, mark_completed
 from data.syllabus import CBSE_9, SOF_9, LESSON_STEPS
 
+from services.llm import generate_speech
+
 # -----------------------------
 # Streamlit Page Configuration
 # -----------------------------
