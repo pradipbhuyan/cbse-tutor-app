@@ -143,13 +143,12 @@ teacher_persona = st.sidebar.selectbox(
 
 
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
-    [
     "📖 Lesson",
     "❓ Ask Doubt",
     "📝 Quiz",
     "🧪 Mock Test",
     "🎥 Learn More"
-]
+])
 
 # =========================================================
 # TAB 1 - STEP-WISE LESSON GENERATOR
