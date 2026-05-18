@@ -6,6 +6,7 @@ from services.quiz import generate_quiz
 from services.progress import get_current_step, save_current_step, mark_completed
 from services.llm import generate_speech
 
+
 from services.mock_test import generate_olympiad_mock_test, calculate_score
 
 
@@ -243,14 +244,15 @@ with tab3:
 # TAB 4 - MOCK TEST
 # =========================================================
 with tab4:
-    st.subheader("🧪 SOF Science Olympiad Mock Test")
+
+    st.subheader(f"🧪 SOF {subject} Mock Test")
 
 
     if mode != "SOF Olympiad Tutor":
         st.info("Mock Test is available in **SOF Olympiad Tutor** mode.")
     else:
         st.write("""
-This creates an original SOF-style Science Olympiad mock test.
+This creates an original SOF-style mock test for the selected Olympiad.
 
 It includes:
 - Logical Reasoning
@@ -285,7 +287,8 @@ It includes:
             st.session_state[submitted_key] = False
 
         if st.button("Generate Mock Test"):
-            with st.spinner("Generating Science Olympiad mock test..."):
+            
+            with st.spinner(f"Generating {subject} mock test..."):
 
                 questions = generate_olympiad_mock_test(
                     olympiad=subject,
