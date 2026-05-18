@@ -5,6 +5,7 @@ from services.tutor import generate_step_lesson, answer_doubt
 from services.quiz import generate_quiz
 from services.progress import get_current_step, save_current_step, mark_completed
 from services.llm import generate_speech
+from services.mock_test import generate_mock_test
 
 # -----------------------------
 # Streamlit Page Configuration
