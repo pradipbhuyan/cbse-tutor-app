@@ -141,3 +141,65 @@ def calculate_score(questions, user_answers):
         })
 
     return total_score, max_score, results
+
+def generate_cbse_mock_test(
+    subject,
+    chapter,
+    exam_type="Class Test",
+    num_questions=10,
+    difficulty="Medium"
+):
+
+    prompt = f"""
+Create a CBSE Grade 9 mock test.
+
+Subject: {subject}
+Chapter: {chapter}
+Exam Type: {exam_type}
+Difficulty: {difficulty}
+Questions: {num_questions}
+
+Follow CBSE/NCERT style.
+
+For:
+- Class Test -> short chapter focused questions
+- Mid Term -> moderate difficulty
+- Annual Exam -> mixed conceptual and application questions
+
+Include:
+- MCQs
+- Assertion Reason
+- Case based questions where suitable
+- Numericals for Maths/Science
+- Grammar/Comprehension for English/Hindi
+
+Return ONLY valid JSON.
+
+JSON schema:
+{{
+  "questions": [
+    {{
+      "id": 1,
+      "section": "...",
+      "question": "...",
+      "options": {{
+        "A": "...",
+        "B": "...",
+        "C": "...",
+        "D": "..."
+      }},
+      "answer": "A",
+      "explanation": "...",
+      "marks": 1
+    }}
+  ]
+}}
+"""
+
+    raw = ask_llm(MOCK_TEST_SYSTEM, prompt)
+
+    try:
+        data = json.loads(raw)
+        return data.get("questions", [])
+    except Exception:
+        return []
