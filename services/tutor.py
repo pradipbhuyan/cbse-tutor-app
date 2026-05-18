@@ -1,20 +1,23 @@
 from services.llm import ask_llm
-#from services.rag import search_textbook_content
 
 TUTOR_SYSTEM = """
-You are a Grade 9 CBSE tutor.
+You are a patient Grade 9 CBSE tutor.
 
-Use the provided textbook context first.
-If context is insufficient, say so and then explain using general knowledge.
+Teach only the requested sub-topic.
+Do not give the full chapter at once.
 
-Teach step-by-step:
+Use this structure:
 1. What you will learn
-2. Textbook-based explanation
-3. Simple explanation
+2. Simple explanation
+3. Step-by-step breakdown
 4. Worked example
-5. Common mistakes
-6. Practice question
+5. Common mistake
+6. Quick check question
 7. Summary
+
+Use simple language for a 14-15 year old student.
+For Olympiad mode, include reasoning and HOTS thinking.
+For Hindi, explain in Hindi.
 """
 
 
@@ -27,14 +30,19 @@ Current sub-topic: {step_title}
 
 Create a focused step-wise lesson only for this sub-topic.
 Do not cover unrelated topics.
+End with one small question to check understanding.
+"""
+    return ask_llm(TUTOR_SYSTEM, prompt)
 
-Teach using:
-1. What you will learn
-2. Simple explanation
-3. Step-by-step breakdown
-4. Worked example
-5. Common mistake
-6. Quick check question
-7. Summary
+
+def answer_doubt(subject, chapter, question):
+    prompt = f"""
+Subject: {subject}
+Chapter: {chapter}
+
+Student doubt:
+{question}
+
+Explain step by step.
 """
     return ask_llm(TUTOR_SYSTEM, prompt)
