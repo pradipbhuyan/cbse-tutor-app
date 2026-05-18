@@ -6,9 +6,11 @@ from services.quiz import generate_quiz
 from services.progress import get_current_step, save_current_step, mark_completed
 from services.llm import generate_speech
 
-
-from services.mock_test import generate_olympiad_mock_test, calculate_score
-
+from services.mock_test import (
+    generate_olympiad_mock_test,
+    generate_cbse_mock_test,
+    calculate_score
+)
 
 st.set_page_config(
     page_title="Grade 9 CBSE AI Tutor",
@@ -245,50 +247,51 @@ with tab3:
 # =========================================================
 with tab4:
 
-    st.subheader(f"🧪 SOF {subject} Mock Test")
+    st.subheader("🧪 AI Mock Test Generator")
 
+    mock_type = st.radio(
+        "Choose Test Type",
+        [
+            "CBSE Exam Mock Test",
+            "SOF Olympiad Mock Test"
+        ]
+    )
 
-    if mode != "SOF Olympiad Tutor":
-        st.info("Mock Test is available in **SOF Olympiad Tutor** mode.")
-    else:
-        st.write("""
-This creates an original SOF-style mock test for the selected Olympiad.
+    mock_difficulty = st.selectbox(
+        "Select Difficulty",
+        ["Easy", "Medium", "Hard", "Olympiad HOTS"],
+        key="mock_difficulty"
+    )
 
-It includes:
-- Logical Reasoning
-- Physics
-- Chemistry
-- Biology
-- Achievers/HOTS questions
-""")
+    mock_count = st.slider(
+        "Number of Questions",
+        5,
+        30,
+        10,
+        key="mock_count"
+    )
 
-        mock_difficulty = st.selectbox(
-            "Select Mock Test Difficulty",
-            ["Easy", "Medium", "Hard", "Olympiad HOTS"],
-            key="mock_difficulty"
+    if mock_type == "CBSE Exam Mock Test":
+
+        exam_type = st.selectbox(
+            "Exam Type",
+            [
+                "Class Test",
+                "Mid Term",
+                "Annual Exam"
+            ]
         )
 
-        mock_count = st.slider(
-            "Number of Mock Test Questions",
-            5,
-            25,
-            10,
-            key="mock_count"
-        )
+    mock_state_key = "mock_test_questions"
 
-        mock_key = f"mock_test_{st.session_state.get('username')}_{mock_difficulty}_{mock_count}"
-        submitted_key = f"mock_submitted_{st.session_state.get('username')}"
-        results_key = f"mock_results_{st.session_state.get('username')}"
+    if mock_state_key not in st.session_state:
+        st.session_state[mock_state_key] = []
 
-        if "mock_test" not in st.session_state:
-            st.session_state["mock_test"] = []
+    if st.button("Generate Mock Test"):
 
-        if submitted_key not in st.session_state:
-            st.session_state[submitted_key] = False
+        with st.spinner("Generating mock test..."):
 
-        if st.button("Generate Mock Test"):
-            
-            with st.spinner(f"Generating {subject} mock test..."):
+            if mock_type == "SOF Olympiad Mock Test":
 
                 questions = generate_olympiad_mock_test(
                     olympiad=subject,
@@ -296,84 +299,94 @@ It includes:
                     difficulty=mock_difficulty
                 )
 
-                
-                st.session_state["mock_test"] = questions
-                st.session_state[submitted_key] = False
-                st.session_state.pop(results_key, None)
+            else:
 
-                for key in list(st.session_state.keys()):
-                    if str(key).startswith("mock_answer_"):
-                        del st.session_state[key]
+                questions = generate_cbse_mock_test(
+                    subject=subject,
+                    chapter=chapter,
+                    exam_type=exam_type,
+                    num_questions=mock_count,
+                    difficulty=mock_difficulty
+                )
 
-        questions = st.session_state.get("mock_test", [])
+            st.session_state[mock_state_key] = questions
 
-        if not questions:
-            st.warning("Click **Generate Mock Test** to start.")
-        else:
-            user_answers = {}
+            for key in list(st.session_state.keys()):
+                if str(key).startswith("mock_answer_"):
+                    del st.session_state[key]
+
+    questions = st.session_state.get(mock_state_key, [])
+
+    if not questions:
+        st.info("Generate a mock test to begin.")
+    else:
+
+        user_answers = {}
+
+        for q in questions:
+
+            qid = str(q.get("id"))
+            options = q.get("options", {})
+
+            st.markdown(f"### Q{qid}. {q.get('question')}")
+
+            st.caption(
+                f"Section: {q.get('section', 'General')} | "
+                f"Marks: {q.get('marks', 1)}"
+            )
+
+            selected = st.radio(
+                "Choose answer",
+                list(options.keys()),
+                format_func=lambda x, opts=options: f"{x}. {opts[x]}",
+                key=f"mock_answer_{qid}"
+            )
+
+            user_answers[qid] = selected
 
             st.markdown("---")
 
-            for q in questions:
-                qid = str(q.get("id"))
-                options = q.get("options", {})
+        if st.button("Submit Mock Test"):
 
-                st.markdown(f"### Q{qid}. {q.get('question', '')}")
-                st.caption(f"Section: {q.get('section', 'Science')} | Marks: {q.get('marks', 1)}")
+            total_score, max_score, results = calculate_score(
+                questions,
+                user_answers
+            )
 
-                if options:
-                    selected = st.radio(
-                        "Choose your answer",
-                        list(options.keys()),
-                        format_func=lambda x, opts=options: f"{x}. {opts.get(x, '')}",
-                        key=f"mock_answer_{qid}"
-                    )
-                    user_answers[qid] = selected
+            st.success(
+                f"🎯 Final Score: {total_score} / {max_score}"
+            )
+
+            st.subheader("📘 Detailed Review")
+
+            for result in results:
+
+                if result["is_correct"]:
+                    st.success(f"Q{result['id']}: Correct")
                 else:
-                    st.error("This question has no options. Generate a new mock test.")
+                    st.error(f"Q{result['id']}: Incorrect")
+
+                options = result.get("options", {})
+
+                selected = result.get("selected")
+                correct = result.get("correct")
+
+                selected_text = options.get(selected, "Not answered")
+                correct_text = options.get(correct, "")
+
+                st.write(
+                    f"Your Answer: **{selected}. {selected_text}**"
+                )
+
+                st.write(
+                    f"Correct Answer: **{correct}. {correct_text}**"
+                )
+
+                st.write(
+                    f"Explanation: {result.get('explanation', '')}"
+                )
 
                 st.markdown("---")
-
-            if st.button("Submit Mock Test"):
-                total_score, max_score, results = calculate_score(
-                    questions,
-                    user_answers
-                )
-
-                st.session_state[results_key] = {
-                    "total_score": total_score,
-                    "max_score": max_score,
-                    "results": results
-                }
-
-                st.session_state[submitted_key] = True
-
-            if st.session_state.get(submitted_key) and results_key in st.session_state:
-                result_data = st.session_state[results_key]
-
-                st.success(
-                    f"🎯 Your Score: {result_data['total_score']} / {result_data['max_score']}"
-                )
-
-                st.subheader("Answer Review")
-
-                for result in result_data["results"]:
-                    if result["is_correct"]:
-                        st.success(f"Q{result['id']}: Correct")
-                    else:
-                        st.error(f"Q{result['id']}: Incorrect")
-
-                    options = result.get("options", {})
-                    selected = result.get("selected")
-                    correct = result.get("correct")
-
-                    selected_text = options.get(selected, "Not answered")
-                    correct_text = options.get(correct, "")
-
-                    st.write(f"Your answer: **{selected}. {selected_text}**")
-                    st.write(f"Correct answer: **{correct}. {correct_text}**")
-                    st.write(f"Explanation: {result.get('explanation', '')}")
-                    st.markdown("---")
 
 
 st.markdown("---")
