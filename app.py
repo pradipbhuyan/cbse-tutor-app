@@ -1,10 +1,9 @@
 import streamlit as st
 
-from services.tutor import generate_step_lesson, answer_doubt
-from services.progress import get_current_step, save_current_step, mark_completed
 from data.syllabus import CBSE_9, SOF_9, LESSON_STEPS
-
-
+from services.tutor import generate_step_lesson, answer_doubt
+from services.quiz import generate_quiz
+from services.progress import get_current_step, save_current_step, mark_completed
 from services.llm import generate_speech
 
 # -----------------------------
@@ -29,43 +28,31 @@ USERS = {
 # -----------------------------
 def login_page():
     st.title("🔐 Login - Grade 9 CBSE AI Tutor")
-
     st.markdown("### Welcome to the AI Learning Platform")
 
     username = st.text_input("Username")
     password = st.text_input("Password", type="password")
 
     if st.button("Login"):
-
         if username in USERS and USERS[username] == password:
-
             st.session_state["logged_in"] = True
             st.session_state["username"] = username
-
             st.success("✅ Login successful")
-
             st.rerun()
-
         else:
             st.error("❌ Invalid username or password")
-
 
 # -----------------------------
 # Logout
 # -----------------------------
 def logout_button():
-
     with st.sidebar:
-
         st.write(f"👤 Logged in as: **{st.session_state.get('username')}**")
 
         if st.button("Logout"):
-
             st.session_state["logged_in"] = False
             st.session_state["username"] = None
-
             st.rerun()
-
 
 # -----------------------------
 # Session State Initialization
@@ -76,7 +63,6 @@ if "logged_in" not in st.session_state:
 if "username" not in st.session_state:
     st.session_state["username"] = None
 
-
 # -----------------------------
 # Show Login Page if not logged in
 # -----------------------------
@@ -84,12 +70,10 @@ if not st.session_state["logged_in"]:
     login_page()
     st.stop()
 
-
 # -----------------------------
 # Sidebar Logout
 # -----------------------------
 logout_button()
-
 
 # -----------------------------
 # Main Application
@@ -122,7 +106,6 @@ mode = st.sidebar.radio(
 # Subject & Chapter Selection
 # -----------------------------
 if mode == "CBSE Chapter Tutor":
-
     subject = st.sidebar.selectbox(
         "Select Subject",
         list(CBSE_9.keys())
@@ -132,9 +115,7 @@ if mode == "CBSE Chapter Tutor":
         "Select Chapter",
         CBSE_9[subject]
     )
-
 else:
-
     subject = st.sidebar.selectbox(
         "Select Olympiad",
         list(SOF_9.keys())
@@ -145,7 +126,6 @@ else:
         SOF_9[subject]
     )
 
-
 # -----------------------------
 # Tabs
 # -----------------------------
@@ -155,13 +135,10 @@ tab1, tab2, tab3 = st.tabs([
     "📝 Quiz"
 ])
 
-
-
 # =========================================================
-# TAB 1 - LESSON GENERATOR
+# TAB 1 - STEP-WISE LESSON GENERATOR
 # =========================================================
 with tab1:
-
     st.subheader("📖 Step-by-Step Guided Lesson")
 
     username = st.session_state.get("username", "student")
@@ -179,10 +156,21 @@ with tab1:
 
     saved_step = get_current_step(username, mode, subject, chapter)
 
-    if "lesson_step" not in st.session_state:
-        st.session_state["lesson_step"] = saved_step
+    # Unique keys preserve lessons separately for each user/mode/subject/chapter.
+    step_key = f"lesson_step_{username}_{mode}_{subject}_{chapter}"
+    lesson_key = f"lesson_text_{username}_{mode}_{subject}_{chapter}"
+    audio_key = f"lesson_audio_{username}_{mode}_{subject}_{chapter}"
 
-    current_step = st.session_state["lesson_step"]
+    if step_key not in st.session_state:
+        st.session_state[step_key] = saved_step
+
+    current_step = st.session_state[step_key]
+
+    # Safety check in case syllabus steps changed after progress was saved.
+    if current_step >= len(steps):
+        current_step = 0
+        st.session_state[step_key] = 0
+        save_current_step(username, mode, subject, chapter, 0)
 
     st.progress((current_step + 1) / len(steps))
 
@@ -195,86 +183,84 @@ with tab1:
 
     with col1:
         if st.button("⬅ Previous") and current_step > 0:
-            st.session_state["lesson_step"] -= 1
-            save_current_step(username, mode, subject, chapter, st.session_state["lesson_step"])
+            st.session_state[step_key] -= 1
+            save_current_step(username, mode, subject, chapter, st.session_state[step_key])
+            st.session_state.pop(lesson_key, None)
+            st.session_state.pop(audio_key, None)
             st.rerun()
 
     with col2:
         if st.button("✅ Mark Step Complete"):
             if current_step < len(steps) - 1:
-                st.session_state["lesson_step"] += 1
-                save_current_step(username, mode, subject, chapter, st.session_state["lesson_step"])
+                st.session_state[step_key] += 1
+                save_current_step(username, mode, subject, chapter, st.session_state[step_key])
+                st.session_state.pop(lesson_key, None)
+                st.session_state.pop(audio_key, None)
                 st.rerun()
             else:
                 mark_completed(username, mode, subject, chapter)
-                st.success("Chapter completed!")
+                st.success("🎉 Chapter completed!")
 
     with col3:
         if st.button("🔄 Restart Chapter"):
-            st.session_state["lesson_step"] = 0
+            st.session_state[step_key] = 0
             save_current_step(username, mode, subject, chapter, 0)
+            st.session_state.pop(lesson_key, None)
+            st.session_state.pop(audio_key, None)
             st.rerun()
 
     if st.button("Generate This Step Lesson"):
-
         with st.spinner("Generating focused lesson..."):
-
             lesson = generate_step_lesson(
                 subject,
                 chapter,
                 mode,
                 steps[current_step]
             )
-            
-            st.session_state["current_lesson"] = lesson
-            
-            st.markdown(lesson)
-            
-            if st.button("🔊 Read Aloud"):
-            
-                with st.spinner("Generating audio..."):
-            
-                    audio_file = generate_speech(lesson)
-            
-                    audio_bytes = open(audio_file, "rb").read()
-            
-                    st.audio(audio_bytes, format="audio/mp3")
+            st.session_state[lesson_key] = lesson
+            st.session_state.pop(audio_key, None)
 
+    # Keep lesson visible after Streamlit reruns.
+    if lesson_key in st.session_state:
+        lesson = st.session_state[lesson_key]
+        st.markdown(lesson)
+
+        if st.button("🔊 Read Aloud"):
+            with st.spinner("Generating audio..."):
+                audio_file = generate_speech(lesson)
+                with open(audio_file, "rb") as audio:
+                    st.session_state[audio_key] = audio.read()
+
+        # Keep audio player visible after reruns too.
+        if audio_key in st.session_state:
+            st.audio(st.session_state[audio_key], format="audio/mp3")
+    else:
+        st.warning("Click **Generate This Step Lesson** to start or resume this lesson step.")
 
 # =========================================================
 # TAB 2 - ASK DOUBT
 # =========================================================
 with tab2:
-
     st.subheader("❓ Ask Your Doubt")
 
-    doubt = st.text_area(
-        "Type your question here"
-    )
+    doubt = st.text_area("Type your question here")
 
     if st.button("Explain Doubt"):
-
         if doubt.strip() == "":
             st.warning("Please enter a question.")
-
         else:
-
             with st.spinner("Thinking..."):
-
                 answer = answer_doubt(
                     subject,
                     chapter,
                     doubt
                 )
-
                 st.markdown(answer)
-
 
 # =========================================================
 # TAB 3 - QUIZ
 # =========================================================
 with tab3:
-
     st.subheader("📝 Practice Quiz")
 
     difficulty = st.selectbox(
@@ -295,9 +281,7 @@ with tab3:
     )
 
     if st.button("Generate Quiz"):
-
         with st.spinner("Creating quiz..."):
-
             quiz = generate_quiz(
                 subject,
                 chapter,
@@ -305,9 +289,7 @@ with tab3:
                 difficulty,
                 count
             )
-
             st.markdown(quiz)
-
 
 # -----------------------------
 # Footer
