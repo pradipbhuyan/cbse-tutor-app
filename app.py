@@ -1,7 +1,8 @@
 import streamlit as st
-from data.syllabus import CBSE_9, SOF_9
-from services.tutor import generate_lesson, answer_doubt
-from services.quiz import generate_quiz
+
+from services.tutor import generate_step_lesson, answer_doubt
+from services.progress import get_current_step, save_current_step, mark_completed
+from data.syllabus import CBSE_9, SOF_9, LESSON_STEPS
 
 # -----------------------------
 # Streamlit Page Configuration
@@ -152,24 +153,74 @@ tab1, tab2, tab3 = st.tabs([
 ])
 
 
+
 # =========================================================
 # TAB 1 - LESSON GENERATOR
 # =========================================================
 with tab1:
 
-    st.subheader("📖 AI Generated Lesson")
+    st.subheader("📖 Step-by-Step Guided Lesson")
+
+    username = st.session_state.get("username", "student")
+
+    default_steps = [
+        "Concept introduction",
+        "Core explanation",
+        "Worked examples",
+        "Practice questions",
+        "Revision and recap"
+    ]
+
+    subject_steps = LESSON_STEPS.get(subject, {})
+    steps = subject_steps.get(chapter, default_steps)
+
+    saved_step = get_current_step(username, mode, subject, chapter)
+
+    if "lesson_step" not in st.session_state:
+        st.session_state["lesson_step"] = saved_step
+
+    current_step = st.session_state["lesson_step"]
+
+    st.progress((current_step + 1) / len(steps))
 
     st.write(f"### Subject: {subject}")
-    st.write(f"### Topic: {chapter}")
+    st.write(f"### Chapter/Topic: {chapter}")
+    st.write(f"### Step {current_step + 1} of {len(steps)}")
+    st.info(f"Current Learning Step: **{steps[current_step]}**")
 
-    if st.button("Generate Lesson"):
+    col1, col2, col3 = st.columns(3)
 
-        with st.spinner("Generating lesson..."):
+    with col1:
+        if st.button("⬅ Previous") and current_step > 0:
+            st.session_state["lesson_step"] -= 1
+            save_current_step(username, mode, subject, chapter, st.session_state["lesson_step"])
+            st.rerun()
 
-            lesson = generate_lesson(
+    with col2:
+        if st.button("✅ Mark Step Complete"):
+            if current_step < len(steps) - 1:
+                st.session_state["lesson_step"] += 1
+                save_current_step(username, mode, subject, chapter, st.session_state["lesson_step"])
+                st.rerun()
+            else:
+                mark_completed(username, mode, subject, chapter)
+                st.success("Chapter completed!")
+
+    with col3:
+        if st.button("🔄 Restart Chapter"):
+            st.session_state["lesson_step"] = 0
+            save_current_step(username, mode, subject, chapter, 0)
+            st.rerun()
+
+    if st.button("Generate This Step Lesson"):
+
+        with st.spinner("Generating focused lesson..."):
+
+            lesson = generate_step_lesson(
                 subject,
                 chapter,
-                mode
+                mode,
+                steps[current_step]
             )
 
             st.markdown(lesson)
