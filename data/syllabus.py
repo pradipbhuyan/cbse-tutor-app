@@ -1,71 +1,37 @@
-CBSE_9 = {
-    "Science": [
-        "Matter in Our Surroundings",
-        "Is Matter Around Us Pure",
-        "Atoms and Molecules",
-        "Structure of the Atom",
-        "The Fundamental Unit of Life",
-        "Tissues",
-        "Motion",
-        "Force and Laws of Motion",
-        "Gravitation",
-        "Work and Energy",
-        "Sound",
-        "Improvement in Food Resources"
-    ],
-    "Maths": [
-        "Number Systems",
-        "Polynomials",
-        "Coordinate Geometry",
-        "Linear Equations in Two Variables",
-        "Introduction to Euclid's Geometry",
-        "Lines and Angles",
-        "Triangles",
-        "Quadrilaterals",
-        "Circles",
-        "Heron's Formula",
-        "Surface Areas and Volumes",
-        "Statistics"
-    ],
-    "English": [
-        "Reading Comprehension",
-        "Writing Skills",
-        "Grammar",
-        "Beehive Prose",
-        "Beehive Poetry",
-        "Moments Supplementary Reader"
-    ],
-    "Social Science": [
-        "History",
-        "Geography",
-        "Political Science",
-        "Economics"
-    ],
-    "Hindi": [
-        "क्षितिज / स्पर्श",
-        "कृतिका / संचयन",
-        "व्याकरण",
-        "लेखन कौशल",
-        "पठन कौशल"
-    ]
-}
-
-SOF_9 = {
-    "Science Olympiad": [
-        "Logical Reasoning",
-        "Science",
-        "Achievers Section"
-    ],
-    "Maths Olympiad": [
-        "Logical Reasoning",
-        "Mathematical Reasoning",
-        "Everyday Mathematics",
-        "Achievers Section"
-    ],
-    "English Olympiad": [
-        "Word and Structure Knowledge",
-        "Reading",
-        "Spoken and Written Expression",
-        "Achievers Section"
-    ]
+LESSON_STEPS = {
+    "Science": {
+        "Matter in Our Surroundings": [
+            "Introduction to matter",
+            "Physical nature of matter",
+            "States of matter",
+            "Properties of solids, liquids and gases",
+            "Change of state",
+            "Evaporation",
+            "Factors affecting evaporation",
+            "Chapter recap and practice"
+        ],
+        "Motion": [
+            "Rest and motion",
+            "Distance and displacement",
+            "Speed and velocity",
+            "Acceleration",
+            "Distance-time graph",
+            "Velocity-time graph",
+            "Equations of motion",
+            "Numericals practice",
+            "Chapter recap"
+        ]
+    },
+    "Science Olympiad": {
+        "Science": [
+            "Logical reasoning in science",
+            "Physics reasoning questions",
+            "Chemistry concept questions",
+            "Biology concept questions",
+            "Data interpretation",
+            "Assertion and reason questions",
+            "HOTS practice",
+            "Mock test"
+        ]
+    }
 }
