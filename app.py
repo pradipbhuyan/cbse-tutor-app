@@ -1,4 +1,5 @@
 import streamlit as st
+import os
 
 from data.syllabus import CBSE_9, SOF_9, LESSON_STEPS
 from services.tutor import generate_step_lesson, answer_doubt
@@ -12,12 +13,13 @@ from services.mock_test import (
     calculate_score
 )
 
+from services.ocr import extract_text_from_image
+
 st.set_page_config(
     page_title="Grade 9 CBSE AI Tutor",
     page_icon="📚",
     layout="wide"
 )
-
 
 USERS = {
     "akshita": st.secrets["AKSHITA_PASSWORD"],
@@ -25,9 +27,17 @@ USERS = {
     "admin": st.secrets["ADMIN_PASSWORD"]
 }
 
+VOICE_OPTIONS = {
+    "English India Female (Neerja)": "en-IN-NeerjaNeural",
+    "English India Male (Prabhat)": "en-IN-PrabhatNeural",
+    "Hindi Female (Swara)": "hi-IN-SwaraNeural",
+    "Hindi Male (Madhur)": "hi-IN-MadhurNeural",
+    "US Female (Aria)": "en-US-AriaNeural",
+    "US Male (Guy)": "en-US-GuyNeural",
+    "UK Female (Sonia)": "en-GB-SoniaNeural",
+    "UK Male (Ryan)": "en-GB-RyanNeural"
+}
 
-import os
-from services.ocr import extract_text_from_image
 
 
 def login_page():
@@ -97,6 +107,13 @@ else:
     subject = st.sidebar.selectbox("Select Olympiad", list(SOF_9.keys()))
     chapter = st.sidebar.selectbox("Select Section", SOF_9[subject])
 
+selected_voice_name = st.sidebar.selectbox(
+    "🔊 Select Narration Voice",
+    list(VOICE_OPTIONS.keys()),
+    index=0
+)
+
+selected_voice = VOICE_OPTIONS[selected_voice_name]
 
 tab1, tab2, tab3, tab4 = st.tabs([
     "📖 Lesson",
@@ -195,7 +212,11 @@ with tab1:
 
         if st.button("🔊 Read Aloud"):
             with st.spinner("Generating audio..."):
-                audio_file = generate_speech(lesson)
+           
+                audio_file = generate_speech(
+                    lesson,
+                    voice=selected_voice
+                )
                 with open(audio_file, "rb") as audio:
                     st.session_state[audio_key] = audio.read()
 
