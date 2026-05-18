@@ -5,7 +5,8 @@ from services.tutor import generate_step_lesson, answer_doubt
 from services.quiz import generate_quiz
 from services.progress import get_current_step, save_current_step, mark_completed
 from services.llm import generate_speech
-from services.mock_test import generate_science_olympiad_mock_test, calculate_score
+
+from services.mock_test import generate_olympiad_mock_test, calculate_score
 
 
 st.set_page_config(
@@ -244,8 +245,9 @@ with tab3:
 with tab4:
     st.subheader("🧪 SOF Science Olympiad Mock Test")
 
-    if mode != "SOF Olympiad Tutor" or subject != "Science Olympiad":
-        st.info("Mock Test is currently available for **SOF Olympiad Tutor → Science Olympiad**.")
+
+    if mode != "SOF Olympiad Tutor":
+        st.info("Mock Test is available in **SOF Olympiad Tutor** mode.")
     else:
         st.write("""
 This creates an original SOF-style Science Olympiad mock test.
@@ -284,11 +286,14 @@ It includes:
 
         if st.button("Generate Mock Test"):
             with st.spinner("Generating Science Olympiad mock test..."):
-                questions = generate_science_olympiad_mock_test(
+
+                questions = generate_olympiad_mock_test(
+                    olympiad=subject,
                     num_questions=mock_count,
                     difficulty=mock_difficulty
                 )
 
+                
                 st.session_state["mock_test"] = questions
                 st.session_state[submitted_key] = False
                 st.session_state.pop(results_key, None)
