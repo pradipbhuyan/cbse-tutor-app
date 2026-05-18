@@ -18,10 +18,13 @@ st.set_page_config(
     layout="wide"
 )
 
+
 USERS = {
-    "parent": "parent123",
-    "student": "student123"
+    "akshita": st.secrets["AKSHITA_PASSWORD"],
+    "pradip": st.secrets["PRADIP_PASSWORD"],
+    "admin": st.secrets["ADMIN_PASSWORD"]
 }
+
 
 import os
 from services.ocr import extract_text_from_image
