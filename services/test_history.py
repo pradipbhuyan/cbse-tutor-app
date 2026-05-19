@@ -67,3 +67,19 @@ def get_leaderboard():
         key=lambda x: x["average_score"],
         reverse=True
     )
+
+def clear_test_history():
+    with open(HISTORY_FILE, "w") as f:
+        json.dump([], f, indent=4)
+
+
+def clear_user_test_history(username):
+    history = load_test_history()
+
+    updated_history = [
+        item for item in history
+        if item.get("username") != username
+    ]
+
+    with open(HISTORY_FILE, "w") as f:
+        json.dump(updated_history, f, indent=4)
