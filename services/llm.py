@@ -71,8 +71,8 @@ def clean_text_for_tts(text: str) -> str:
     text = text.replace("Rightarrow", " therefore ")
 
     # Replace powers
-    text = text.replace("^2", " squared")
-    text = text.replace("^3", " cubed")
+    text = text.replace("^2", " square")
+    text = text.replace("^3", " cube")
 
     # Replace equations carefully
     text = re.sub(r'\s=\s', ' equals ', text)
