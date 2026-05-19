@@ -582,6 +582,18 @@ with tab4:
             final_score = max(0, total_score - negative_score)
             percentage = round((final_score / max_score) * 100, 2) if max_score else 0
 
+            save_test_result({
+                "username": st.session_state.get("username"),
+                "mode": mode,
+                "subject": subject,
+                "chapter": chapter,
+                "difficulty": mock_difficulty,
+                "score": final_score,
+                "max_score": max_score,
+                "percentage": percentage,
+                "date": datetime.now().isoformat()
+            })
+
             result_payload = {
                 "username": st.session_state.get("username"),
                 "mode": mode,
