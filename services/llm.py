@@ -38,33 +38,28 @@ async def _generate_edge_tts(text, output_file, voice, rate="+0%", pitch="+0Hz")
 
 def clean_text_for_tts(text: str) -> str:
 
+    import re
+
     # Remove markdown headers
     text = re.sub(r'#+\s*', '', text)
 
-    # Remove bold/italic markdown
+    # Remove markdown bold/italic
     text = re.sub(r'\*\*(.*?)\*\*', r'\1', text)
     text = re.sub(r'\*(.*?)\*', r'\1', text)
 
-    # Remove bullet markdown
+    # Remove bullets
     text = re.sub(r'^\s*[-•]\s*', '', text, flags=re.MULTILINE)
 
-    # Remove numbered markdown artifacts
+    # Remove code ticks
     text = re.sub(r'`+', '', text)
 
-    # Remove excessive line breaks
-    text = re.sub(r'\n+', '\n', text)
+    # Remove markdown separators
+    text = re.sub(r'---+', ' ', text)
 
-    # Remove markdown tables and separators
-    text = re.sub(r'\|', ' ', text)
-    text = re.sub(r'---+', '', text)
+    # Remove LaTeX backslashes
+    text = text.replace("\\", "")
 
-    # Remove markdown symbols
-    text = re.sub(r"#+\s*", "", text)
-    text = re.sub(r"\*\*(.*?)\*\*", r"\1", text)
-    text = re.sub(r"\*(.*?)\*", r"\1", text)
-    text = re.sub(r"`+", "", text)
-
-    # Remove brackets commonly spoken badly in maths
+    # Remove brackets
     text = text.replace("(", "")
     text = text.replace(")", "")
     text = text.replace("[", "")
@@ -72,20 +67,22 @@ def clean_text_for_tts(text: str) -> str:
     text = text.replace("{", "")
     text = text.replace("}", "")
 
-    # Make math symbols more readable
-    text = text.replace("\\Rightarrow", " therefore ")
-    text = text.replace("=>", " therefore ")
+    # Math readability improvements
+    text = text.replace("Rightarrow", " therefore ")
+
+    # Replace powers
     text = text.replace("^2", " squared")
     text = text.replace("^3", " cubed")
-    text = text.replace("^", " to the power of ")
 
-    # Improve variable equations slightly
-    text = text.replace("=", " equals ")
-    text = text.replace("+", " plus ")
-    text = text.replace("-", " minus ")
+    # Replace equations carefully
+    text = re.sub(r'\s=\s', ' equals ', text)
+    text = re.sub(r'\s\+\s', ' plus ', text)
 
-    # Clean extra spaces and line breaks
-    text = re.sub(r"\s+", " ", text)
+    # ONLY replace minus between numbers/variables
+    text = re.sub(r'(\w)-(\w)', r'\1 minus \2', text)
+
+    # Remove repeated spaces
+    text = re.sub(r'\s+', ' ', text)
 
     return text.strip()
 
