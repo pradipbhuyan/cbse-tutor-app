@@ -22,6 +22,8 @@ try:
         save_test_result,
         get_user_history,
         get_leaderboard,
+        clear_test_history,
+        clear_user_test_history,
     )
 except Exception:
     def save_test_result(result):
@@ -717,7 +719,44 @@ with tab6:
                 f"{item.get('percentage')}% | "
                 f"{item.get('date', '')[:10]}"
             )
+    
+    if st.session_state.get("username") in ["pradip", "admin"]:
 
+            st.markdown("---")
+            st.subheader("🧹 Admin: Clear Test History")
+        
+            clear_option = st.selectbox(
+                "Choose what to clear",
+                [
+                    "Only my test history",
+                    "Akshita test history",
+                    "All test history"
+                ]
+            )
+        
+            confirm_clear = st.checkbox(
+                "I understand this will permanently delete selected test history"
+            )
+        
+            if st.button("Clear Selected History"):
+                if not confirm_clear:
+                    st.warning("Please confirm before clearing history.")
+                else:
+                    if clear_option == "Only my test history":
+                        clear_user_test_history(st.session_state.get("username"))
+                        st.success("Your test history cleared.")
+        
+                    elif clear_option == "Akshita test history":
+                        clear_user_test_history("akshita")
+                        st.success("Akshita's test history cleared.")
+        
+                    elif clear_option == "All test history":
+                        clear_test_history()
+                        st.success("All test history cleared.")
+        
+                    st.rerun()
+    else:
+        st.info("Only pradip/admin can clear test history.")
 
 # =========================================================
 # TAB 7 - LEADERBOARD
