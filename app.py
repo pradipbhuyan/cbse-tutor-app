@@ -1,7 +1,7 @@
 import os
 from datetime import datetime
-
 import streamlit as st
+from streamlit_autorefresh import st_autorefresh
 
 from data.syllabus import CBSE_9, SOF_9, LESSON_STEPS
 from services.tutor import generate_step_lesson, answer_doubt
@@ -501,12 +501,41 @@ with tab4:
                 )
 
             st.session_state[mock_state_key] = questions
+            st.session_state["mock_start_time"] = datetime.now().isoformat()
             st.session_state[submitted_key] = False
             st.session_state.pop(results_key, None)
             st.session_state[start_time_key] = datetime.now().isoformat()
             reset_mock_answers()
 
     questions = st.session_state.get(mock_state_key, [])
+
+    if enable_timer and "mock_start_time" in st.session_state:
+
+        st_autorefresh(interval=1000, key="mock_timer_refresh")
+    
+        start_time = datetime.fromisoformat(
+            st.session_state["mock_start_time"]
+        )
+    
+        elapsed_seconds = int(
+            (datetime.now() - start_time).total_seconds()
+        )
+    
+        remaining_seconds = max(
+            0,
+            test_minutes * 60 - elapsed_seconds
+        )
+    
+        remaining_minutes = remaining_seconds // 60
+        remaining_secs = remaining_seconds % 60
+    
+        st.info(
+            f"⏱️ Time remaining: "
+            f"{remaining_minutes:02d}:{remaining_secs:02d}"
+        )
+    
+        if remaining_seconds <= 0:
+            st.error("⏰ Time is over. Submit your test.")
 
     if not questions:
         st.info("Generate a mock test to begin.")
