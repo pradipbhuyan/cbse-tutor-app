@@ -58,6 +58,35 @@ def clean_text_for_tts(text: str) -> str:
     text = re.sub(r'\|', ' ', text)
     text = re.sub(r'---+', '', text)
 
+    # Remove markdown symbols
+    text = re.sub(r"#+\s*", "", text)
+    text = re.sub(r"\*\*(.*?)\*\*", r"\1", text)
+    text = re.sub(r"\*(.*?)\*", r"\1", text)
+    text = re.sub(r"`+", "", text)
+
+    # Remove brackets commonly spoken badly in maths
+    text = text.replace("(", "")
+    text = text.replace(")", "")
+    text = text.replace("[", "")
+    text = text.replace("]", "")
+    text = text.replace("{", "")
+    text = text.replace("}", "")
+
+    # Make math symbols more readable
+    text = text.replace("\\Rightarrow", " therefore ")
+    text = text.replace("=>", " therefore ")
+    text = text.replace("^2", " squared")
+    text = text.replace("^3", " cubed")
+    text = text.replace("^", " to the power of ")
+
+    # Improve variable equations slightly
+    text = text.replace("=", " equals ")
+    text = text.replace("+", " plus ")
+    text = text.replace("-", " minus ")
+
+    # Clean extra spaces and line breaks
+    text = re.sub(r"\s+", " ", text)
+
     return text.strip()
 
 def generate_speech(
